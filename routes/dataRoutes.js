@@ -9,6 +9,6 @@ const token_role = require('../security/checkToken&Role')
 router.get('/all',course.all)
 router.post('/add',token_role("admin","manager"),course.add)
 router.post('/edit/:id',token_role("admin","manager"),course.edit)
-router.delete('/del/:name',token_role("admin","manager"),course.delWarn(course.delete))
+router.delete('/del/:name',token_role("admin","manager"),course.delWarn)
 
 module.exports = router

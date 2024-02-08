@@ -1,7 +1,15 @@
 const {Course} = require('../db/tables')
 const ApiError = require('../apiError')
 const {Op} = require("sequelize")
+const Confirm = require('prompt-confirm')
+let _prompt = require('prompt')
 
+function del(req,res,zapis){
+    Course.destroy({
+        where:{id:zapis.id}
+    })
+    return res.json("Таблица удалена")
+}
 class Courses{
     async all(req,res){
         const all =await Course.findAll()
@@ -54,21 +62,16 @@ class Courses{
         }
         return next(ApiError.badRequest('Таблица по id не найдена'))
     }
-    async delete(req,res){
-        await Course.destroy({
-            where:{name:req.params.name}
-        })
-        return res.json("Таблица удалена")
-    }
-    async delWarn(req,res,del){
+    async delWarn(req,res){
         const prob = await Course.findOne({
             where:{
                 name:req.params.name
             }
         })
         res.json(prob)
-        if(confirm("Вы уверены что хотите удалить таблицу?") && prob) del()
-        return next(ApiError.badRequest('Таблица по id не найдена'))
+        const prompt = new Confirm('Are u sure to delete this zapis')
+        prompt.run()
+        .then(del(req,res,prob))
     }
 }
 
