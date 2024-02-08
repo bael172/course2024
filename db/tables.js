@@ -25,7 +25,11 @@ Course.init({
     description:{type:DataTypes.STRING, allowNull:false}
 })
 
+User.belongsTo(Course)
+Course.hasMany(User)
+
 module.exports = {
-    User
+    User,
+    Course
 }
 
