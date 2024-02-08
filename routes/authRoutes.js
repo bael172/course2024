@@ -1,10 +1,19 @@
 const Router = require('express')
 const router = new Router()
 
-const auth = require('../queries/auth_user')
+const auth = require('../queries/auth')
+const user = require('../queries/user')
 
-router.post('/auth_reg',auth.registration)
-router.post('/auth_login',auth.login)
+const token = require('../security/checkToken')
+const token_role = require('../security/checkToken&Role')
+
+router.post('/reg',auth.registration)
+router.post('/login',auth.login)
 router.get('/check',auth.check)
+
+router.get('/all',token_role("admin","manager"),user.all)
+router.post('/all_where',token_role("admin","manager"),user.all_where)
+router.post('/edit',token,user.edit)
+router.delete('/del',token,user.del)
 
 module.exports = router
