@@ -17,7 +17,6 @@ app.use('/api',router)
 app.get('/msg',(req,res) => { 
     res.status(200).json({message:"Working"})
 })
-
     const start = async()=> {
         try{
             await sequelize.authenticate()

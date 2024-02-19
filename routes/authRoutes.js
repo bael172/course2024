@@ -13,7 +13,7 @@ router.get('/check',auth.check)
 
 router.get('/all',token_role("admin","manager"),user.all)
 router.post('/all_where',token_role("admin","manager"),user.all_where)
-router.post('/edit',token,user.edit)
+router.patch('/edit',token,user.edit)
 router.delete('/del',token,user.del)
 
 module.exports = router
