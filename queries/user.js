@@ -1,3 +1,4 @@
+const ApiError = require('../apiError') 
 const {User} = require('../db/tables')
 const ApiError = require('../apiError')
 const {Op} = require('sequelize')

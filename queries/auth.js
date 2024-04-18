@@ -5,9 +5,9 @@ const {User} = require('../db/tables')
 const {Op} = require("sequelize")
 
 
-const generateJwt = (name,email,phone,role) => {
+const generateJwt = (id,name,email,phone,role) => {
     return jwt.sign(
-        {name, email, phone, role},
+        {id,name, email, phone, role},
         process.env.SECRET_KEY,
         {expiresIn:'24h'}
     )
@@ -17,7 +17,7 @@ class AuthController{
     async registration(req, res, next){
         const {s_name, s_email, s_phone, s_passwd, s_role} = req.body
         if(!s_email || !s_phone || !s_passwd) {
-            return next(ApiError.badRequest('Введите эл.почту, телефона и придумайте пароль'))
+            return next(ApiError.badRequest('Введите эл.почту, телефон и придумайте пароль'))
         }
         const candidate = await User.findOne({
             where:{
@@ -34,12 +34,16 @@ class AuthController{
             phone:s_phone,
             passwd:hashpasswd,
             role:s_role})
-        const token = generateJwt(user.name,user.email,user.phone,user.role)
+        const token = generateJwt(user.id_user,user.name,user.email,user.phone,user.role)
         return res.json({token})
     }
 
     async login(req,res,next){
         const {s_email,s_phone,s_passwd} = req.body
+        if(!req.body.s_email && !req.body.s_passwd ||
+            !req.body.s_phone && !req.body.s_passwd){
+                return next(ApiError.badRequest('Введите эл.почту / телефон и пароль'))
+            }
         const user = await User.findOne({
             where:{
                 [Op.or]:[
@@ -49,19 +53,19 @@ class AuthController{
             }
         })
         if(!user){
-            return next(ApiError.internal('Введен неверный email или пользователь не найден'))
+            return next(ApiError.internal('Введен неверный email/телефон или пользователь не найден'))
         }
         //Сравнение незашифрованного пароля passwd с зашифрованным user.passwd (passwd:hashpasswd)
         let comparePassword = bcrypt.compareSync(s_passwd, user.passwd)
         if(!comparePassword){ //если пароли не совпадают
             return next(ApiError.internal("Указан неверный пароль"))
         }
-        const token = generateJwt(user.name, user.email, user.phone, user.role)
+        const token = generateJwt(user.id_user,user.name, user.email, user.phone, user.role)
         return res.json({token})
     }
 
     async check(req,res,next){
-        const token = generateJwt(req.user.name, req.user.email, req.user.phone, req.user.role)
+        const token = generateJwt(req.user.user_id,req.user.name, req.user.email, req.user.phone, req.user.role)
         if(token) res.json({message:"ALL RIGHT"})
     }
 }
