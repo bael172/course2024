@@ -4,16 +4,16 @@ const {Op} = require("sequelize")
 const Confirm = require('prompt-confirm')
 let _prompt = require('prompt')
 
-function del(req,res,zapis){
-    Course.destroy({
-        where:{id:zapis.id}
-    })
-    return res.json("Таблица удалена")
-}
 class Courses{
     async all(req,res){
-        const all =await Course.findAll()
-        return res.json(all)
+        try{
+            const all = await Course.findAll()
+            if(all.length!==0) return res.json(all)
+            else res.send("Ни одного пользователя в таблице")
+        }
+        catch(e){
+            return next(ApiError.internal("Не удалось выполнить запрос"))
+        }
     }
     async add(req,res,next){
         const {name,cost,period_days,lesson_count,description} = req.body
@@ -23,15 +23,20 @@ class Courses{
                 {cost:cost}
             ]}
         })
-        if(!added) {
-            const add = await Course.create({
-                name:name,
-                cost:cost,
-                period_days:period_days,
-                lesson_count:lesson_count,
-                description:description,
-            })
-            return res.json(add)
+        if(Object.keys(added).length==0) {
+            try{
+                const add = await Course.create({
+                    name:name,
+                    cost:cost,
+                    period_days:period_days,
+                    lesson_count:lesson_count,
+                    description:description,
+                })
+                return res.json(add)
+            }
+            catch(error){
+                return next(ApiError.badRequest("Не удалось создать запись"))
+            }
         }
         else{
             return next(ApiError.badRequest('Курс с таким названием или ценой уже существует'))
@@ -39,29 +44,21 @@ class Courses{
     }
     async edit(req,res){
         const {name,cost,period_days,lesson_count,description} = req.body
-        const prob = await Course.findOne({
-            where:{
-                id:req.params.id
-            }
-        })
-        if(prob){
-            await Course.update({
-                name:name,
-                cost:cost,
-                period_days:period_days,
-                lesson_count:lesson_count,
-                description:description,
-                where:{
-                    id: req.params.id
-                }
-            })
+            const status_upd = await Course.update(
+                {name,cost,period_days,lesson_count,description},{
+                    where:{
+                        id: req.params.id
+                    }
+                })
             const edited = Course.findOne({
                 where:{id:req.params.id}
             })
-            return res.json("Изменения успешны"+edited)
+            if(status_upd[0]){
+                return res.json("Изменения успешны:"+JSON.stringify(edited))
+            }
+            else res.send("Не удалось обновить таблицу")
+            return next(ApiError.badRequest('Таблица по id не найдена'))
         }
-        return next(ApiError.badRequest('Таблица по id не найдена'))
-    }
     async delWarn(req,res){
         const prob = await Course.findOne({
             where:{

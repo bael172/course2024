@@ -1,12 +1,21 @@
 const {User} = require('../db/tables')
+const ApiError = require('../apiError')
 const {Op} = require('sequelize')
+
 class User_Query{
-    async all(req,res){
-        const all = User.findAll()
-        return res.json(all)
+    async get_all(req,res,next){
+        try{
+            const all = await User.findAll()
+            if(all.length!==0) return res.json(all)
+            else res.send("Ни одного пользователя в таблице")
+        }
+        catch(e){
+            return next(ApiError.internal("Не удалось выполнить запрос"))
+        }
     }
-    async all_where(req,res){
-        const vallue = User.findOne({
+
+    async get_all_where(req,res,next){
+        const vallue = await User.findOne({
             where:{
                 [Op.or]:[
                     {id:req.body.id},
@@ -19,67 +28,87 @@ class User_Query{
         })
         return res.json(vallue)
     }
-    /*
-    async add(req,res){
-        const {name,email,password,phone,role} = req.body
-        const user1 =  User.build({
-            name:name,
-            email:email,
-            password:password,
-            phone:phone,
-            role:role
-        })
-        await user1.save()
-        const added = await User.findOne({
-            where:{name:name}
-        })
-        return res.json(added)
-    }
-    */
-    async edit(req,res){
-        const {name,email,password,phone,role} = req.body
-        const user = await User.findOne({
+
+    async get_by_id(req,res,next){
+        const found = await User.findOne({
             where:{
-                [Op.or]:[
-                    [Op.and],[
-                        {id:req.user.id},
-                        {email:email}
-                    ],
-                    [Op.and],[
-                        {id:req.user.id},
-                        {phone:phone}
-                    ]
-                ]
+                id_user : req.params.id
+            }
+        })
+        const found_id = found.dataValues.id_user
+        if(Object.keys(found).length!==0){
+            const makaka = await User.findOne({
+                where:{
+                    id_user : found_id
+                }
+            })
+            res.send(makaka)
+        }
+        else res.send(`Пользователя id = ${req.params.id} нет`)
+    }
+
+    async edit(req,res){
+        const {name,email,password,phone} = req.body
+        const search = await User.findOne({
+            where:{
+                id_user : req.user.id
+            }
+        })
+        if(Object.keys(search).length!==0){
+            const check_possib = await User.findOne({
+                where:{
+                    email:email,
+                    phone:phone
+                }
+            })
+            if(Object.keys(check_possib).length==0){
+                const status_upd = await User.update({
+                    name:name,
+                    email:email,
+                    phone:phone,
+                    password:password},{
+                    where:{
+                            id_user : req.user.id
+                        }
+                    })
+                    if (status_upd [0] === 1){
+                        console.log("Данные успешно обновлены")
+                        const result = await User.findOne({
+                            where:{
+                                id:req.user.id
+                            }
+                        })
+                        return res.json(result)
+                    }
+                    else {
+                        res.send("Ошибка при обновлении данных")
+                    }
 
             }
-        })
-        if(user==null||undefined) res.json('Таблица не найдена')
-        await User.update({
-            name:name,
-            email:email,
-            password:password,
-            phone:phone,
-            role:role,
-            where:{id:user.id}
-        })
-        const result = await User.findOne({
-            where:{
-                id:user.id
-            }
-        })
-        return res.json(result)
+            else res.send("Почта и пароль уже зарегистрированы другими пользователями")
+        }
+        else res.send("Создайте учётную запись")
     }
 
     async del(req,res){
-        const del = await User.findOne({
+        const found = await User.findOne({
             where:{id:req.user.id}
         })
-        if(del==null||undefined) res.json('Запись не найдена')
-        await User.destroy({
-            where:{id:req.user.id}
-        })
+        if(Object.keys(found).length!==0){
+            const status_del = await User.destroy({
+                where:{id:req.user.id}
+            })
+            if(status_del[0] === 1){
+                res.send("Запись удалена")
+            }
+            else res.send("Не удалось удалить запись")
+        }
+    }
 
-        return res.json("Была удалена следующая запись",del)
+    async del_all(req,res,next){
+        const dest = await User.destroy({
+            truncate:true
+        })
     }
 }
 module.exports = new User_Query()
