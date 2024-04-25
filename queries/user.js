@@ -36,7 +36,7 @@ class User_Query{
             }
         })
         const found_id = found.dataValues.id_user
-        if(Object.keys(found).length!==0){
+        if(found || found!=null){
             const makaka = await User.findOne({
                 where:{
                     id_user : found_id
@@ -54,7 +54,7 @@ class User_Query{
                 id_user : req.user.id
             }
         })
-        if(search || search!==null){
+        if(search || search!=null){
             const check_possib = await User.findOne({
                 where:{
                     email:email,
@@ -94,7 +94,7 @@ class User_Query{
         const found = await User.findOne({
             where:{id:req.user.id}
         })
-        if(Object.keys(found).length!==0){
+        if(found || found!=null){
             const status_del = await User.destroy({
                 where:{id:req.user.id}
             })
@@ -109,6 +109,8 @@ class User_Query{
         const dest = await User.destroy({
             truncate:true
         })
+        if (dest >=1) return res.send("Таблица опустошена")
+        else return next(ApiError.internal("Не удалось удалить записи"))
     }
 }
 module.exports = new User_Query()

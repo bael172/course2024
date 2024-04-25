@@ -11,8 +11,8 @@ router.post('/reg',auth.registration)
 router.post('/login',auth.login)
 router.get('/check',auth.check)
 
-router.get('/all',token_role("admin","manager"),user.all)
-router.post('/all_where',token_role("admin","manager"),user.all_where)
+router.get('/all',token_role("admin","manager"),user.get_all)
+router.post('/all_where',token_role("admin","manager"),user.get_all_where)
 router.patch('/edit',token,user.edit)
 router.delete('/del',token,user.del)
 

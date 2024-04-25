@@ -57,7 +57,7 @@ class Courses{
                     }
                 })
             const edited = Course.findOne({
-                where:{id:req.params.id}
+                where:{id_course:req.params.id}
             })
             if(status_upd[0]){
                 return res.json("Изменения успешны:"+JSON.stringify(edited))
@@ -75,7 +75,7 @@ class Courses{
         if(prob || prob!==null){
             const del_status = await Course.destroy({
                 where:{
-                    id_course:prob.dataValues.id
+                    id_course:prob.dataValues.id_course
                 }
             })
             if(del_status >=1 ) res.send("Запись удалена")
