@@ -1,6 +1,5 @@
 const ApiError = require('../apiError') 
 const {User} = require('../db/tables')
-const ApiError = require('../apiError')
 const {Op} = require('sequelize')
 
 class User_Query{
@@ -55,14 +54,14 @@ class User_Query{
                 id_user : req.user.id
             }
         })
-        if(Object.keys(search).length!==0){
+        if(search || search!==null){
             const check_possib = await User.findOne({
                 where:{
                     email:email,
                     phone:phone
                 }
             })
-            if(Object.keys(check_possib).length==0){
+            if(!check_possib || check_possib==null){
                 const status_upd = await User.update({
                     name:name,
                     email:email,

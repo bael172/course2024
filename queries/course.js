@@ -5,11 +5,11 @@ const Confirm = require('prompt-confirm')
 let _prompt = require('prompt')
 
 class Courses{
-    async all(req,res){
+    async get_all(req,res){
         try{
             const all = await Course.findAll()
             if(all.length!==0) return res.json(all)
-            else res.send("Ни одного пользователя в таблице")
+            else res.send("Ни одной записи в таблице")
         }
         catch(e){
             return next(ApiError.internal("Не удалось выполнить запрос"))
@@ -23,7 +23,7 @@ class Courses{
                 {cost:cost}
             ]}
         })
-        if(Object.keys(added).length==0) {
+        if(!added || added==null) {
             try{
                 const add = await Course.create({
                     name:name,
@@ -44,10 +44,16 @@ class Courses{
     }
     async edit(req,res){
         const {name,cost,period_days,lesson_count,description} = req.body
+        const found = await Course.findOne({
+            where:{
+                id_course:req.params.id
+            }
+        })
+        if(found || found!==null){
             const status_upd = await Course.update(
                 {name,cost,period_days,lesson_count,description},{
                     where:{
-                        id: req.params.id
+                        id_course: req.params.id
                     }
                 })
             const edited = Course.findOne({
@@ -57,18 +63,25 @@ class Courses{
                 return res.json("Изменения успешны:"+JSON.stringify(edited))
             }
             else res.send("Не удалось обновить таблицу")
-            return next(ApiError.badRequest('Таблица по id не найдена'))
         }
-    async delWarn(req,res){
+        else return next(ApiError.badRequest(`Таблица по id=${req.prarams.id} не найдена`))
+        }
+    async del(req,res){
         const prob = await Course.findOne({
             where:{
-                name:req.params.name
+                id_course:req.params.id
             }
         })
-        res.json(prob)
-        const prompt = new Confirm('Are u sure to delete this zapis')
-        prompt.run()
-        .then(del(req,res,prob))
+        if(prob || prob!==null){
+            const del_status = await Course.destroy({
+                where:{
+                    id_course:prob.dataValues.id
+                }
+            })
+            if(del_status >=1 ) res.send("Запись удалена")
+            else next(ApiError.internal("Не удалось удалить запись"))
+        }
+        else return res.send(`Запись с id=${req.params.id} не существует`)
     }
 }
 
