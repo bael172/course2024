@@ -7,7 +7,7 @@ const {Op} = require("sequelize")
 
 const generateJwt = (id,name,email,phone,role) => {
     return jwt.sign(
-        {id,name, email, phone, role},
+        {id,name,email,phone,role},
         process.env.SECRET_KEY,
         {expiresIn:'24h'}
     )
@@ -15,7 +15,7 @@ const generateJwt = (id,name,email,phone,role) => {
 
 class AuthController{
     async registration(req, res, next){
-        const {s_name, s_email, s_phone, s_passwd,s_passwdCheck, s_role} = req.body
+        const {s_name, s_email, s_phone, s_passwd, s_passwdAgain, s_role} = req.body
         if(!s_email || !s_phone || !s_passwd) {
             return next(ApiError.badRequest('Введите эл.почту, телефон и придумайте пароль'))
         }
@@ -33,21 +33,27 @@ class AuthController{
         if(candidate) {
             return next(ApiError.badRequest('Пользователь с такой почтой или телефоном уже существует'))
         }
-        const hashpasswd = await bcrypt.hash(s_passwd,5)
-        const user = await User.create({
-            name:s_name,
-            email:s_email,
-            phone:s_phone,
-            passwd:hashpasswd,
-            role:s_role})
-        const token = generateJwt(user.id_user,user.name,user.email,user.phone,user.role)
-        return res.json({token})
+        if(!s_passwdAgain){
+            return next(ApiError.badRequest("Повторно введите ваш пароль"))
+        }
+        if(s_passwd == s_passwdAgain){
+            const hashpasswd = await bcrypt.hash(s_passwd,5)
+            const user = await User.create({
+                name:s_name,
+                email:s_email,
+                phone:s_phone,
+                passwd:hashpasswd,
+                role:s_role})
+            const token = generateJwt(user.id_user,user.name,user.email,user.phone,user.role)
+            return res.json({token})
+        }
+        else return next(ApiError.badRequest('Пароли не совпадают'))
+        
     }
 
     async login(req,res,next){
         const {s_email,s_phone,s_passwd} = req.body
-        if(!req.body.s_email && !req.body.s_passwd ||
-            !req.body.s_phone && !req.body.s_passwd){
+        if(!s_email && !s_passwd || !s_phone && !s_passwd){
                 return next(ApiError.badRequest('Введите эл.почту / телефон и пароль'))
             }
         const user = await User.findOne({
@@ -68,12 +74,14 @@ class AuthController{
         }
         const token = generateJwt(user.id_user,user.name, user.email, user.phone, user.role)
         return res.json({token})
+        //res.redirect('/path/path')
     }
 
     async check(req,res,next){
-        const token = generateJwt(req.user.user_id,req.user.name, req.user.email, req.user.phone, req.user.role)
+        const token = generateJwt(req.user.id_user,req.user.name, req.user.email, req.user.phone, req.user.role)
         if(token) res.json({message:"ALL RIGHT"})
     }
+
 }
 
 module.exports = new AuthController()

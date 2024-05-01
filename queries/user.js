@@ -1,6 +1,7 @@
 const ApiError = require('../apiError') 
 const {User} = require('../db/tables')
 const {Op} = require('sequelize')
+
 class User_Query{
     async get_all(req,res){
         const got = await User.findAll()

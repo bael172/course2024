@@ -15,6 +15,16 @@ class Courses{
             return next(ApiError.internal("Не удалось выполнить запрос"))
         }
     }
+    async get_all(req,res){
+        try{
+            const all = await Course.findAll()
+            if(all.length!==0) return res.json(all)
+            else res.send("Ни одной записи в таблице")
+        }
+        catch(e){
+            return next(ApiError.internal("Не удалось выполнить запрос"))
+        }
+    }
     async add(req,res,next){
         const {name,cost,period_days,lesson_count,description} = req.body
         const added = await Course.findOne({
@@ -65,12 +75,10 @@ class Courses{
             else res.send("Не удалось обновить таблицу")
         }
         else return next(ApiError.badRequest(`Таблица по id=${req.prarams.id} не найдена`))
-        }
+    }
     async del(req,res){
         const prob = await Course.findOne({
-            where:{
-                id_course:req.params.id
-            }
+            where:{id_course:req.params.id}
         })
         if(prob || prob!==null){
             const del_status = await Course.destroy({
