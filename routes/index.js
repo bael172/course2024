@@ -5,6 +5,6 @@ const auth = require('./authRoutes')
 const course = require('./dataRoutes')
 
 router.use('/user',auth)
-router.use('/data',course)
+router.use('/course',course)
 
 module.exports = router

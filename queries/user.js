@@ -2,22 +2,25 @@ const ApiError = require('../apiError')
 const {User} = require('../db/tables')
 const {Op} = require('sequelize')
 class User_Query{
-    async all(req,res){
+    async get_all(req,res){
         const got = await User.findAll()
         return res.json(got)
     }
-    async all_where(req,res,next){
+    async get_all_where(req,res,next){
+        console.log(null==undefined)
+        const {id,name,email,phone,role} = req.body
+        const new_obj = {id,name,email,phone,role}
+        Object.entries(new_obj).forEach(([key,value])=>{
+            new_obj[key] = value !==undefined? value : null
+        }) //присвоение неопределённым полям значение null
+        let condition = {} //динамическое условие включающее только поля со значениями
+        Object.entries(new_obj).forEach(([key,value])=>{
+            if(key=="id") key="id_user"
+            if(value!==null || value!==undefined) condition[key]=value})
         try{
-            const {id,name,email,phone,role} = req.body
-            const vallue = await User.findAll({
+            let vallue = await User.findAll({
                 where:{
-                    [Op.or]:[
-                        {id_user:id},
-                        {name:name},
-                        {email:email},
-                        {phone:phone},
-                        {role:role}
-                    ]
+                    [Op.or]:condition
                 }
             })
             return res.json(vallue)
@@ -25,58 +28,93 @@ class User_Query{
         catch(e){
             return next(ApiError.badRequest("ошибка"))
         }
-
     }
-    async edit(req,res,next){
-
-        try{
-            const usr = await User.findOne({
+        async get_by_id(req,res,next){
+            const found = await User.findOne({
                 where:{
-                    email:req.user.email
+                    id_user : req.params.id
                 }
             })
-        }
-        catch(e){
-            return next(ApiError.internal('ошибка'))
-        }
-            try{
-                const {name,email,phone,password,role} = req.body
-                await User.update({
-                    name:name,
-                    email:email,
-                    password:password,
-                    phone:phone,
-                    role:role,
-                    where:{email:req.user.email}
+            const found_id = found.dataValues.id_user
+            if(found || found!=null){
+                const makaka = await User.findOne({
+                    where:{
+                        id_user : found_id
+                    }
                 })
+                res.send(makaka)
             }
-            catch(e){
-                return next(ApiError.internal("Пользователь не найден"))
-            } 
-            const upd = await User.findOne({
+            else res.send(`Пользователя id = ${req.params.id} нет`)
+        }
+    
+        async edit(req,res){
+            const search = await User.findOne({
                 where:{
-                    email:req.user.email
+                    id_user : req.user.id
                 }
             })
-            return res.json(upd)
-    }
+            const {name,email,password,phone} = req.body
+            if(search || search!=null){
+                const check_possib = await User.findOne({
+                    where:{
+                        [Op.or]:[
+                            {email:email},
+                            {phone:phone}
+                        ]
 
-    async del(req,res){
-        const del = await User.findOne({
-            where:{
-                [Op.or]:[
-                    {email:req.user.email},
-                    {phone:req.user.phone}
-                ]
+                    }
+                })
+                if(!check_possib || check_possib==null){
+                    const status_upd = await User.update({
+                        name:name,
+                        email:email,
+                        phone:phone,
+                        password:password},{
+                        where:{
+                                id_user : req.user.id
+                            }
+                        })
+                        if (status_upd [0] === 1){
+                            console.log("Данные успешно обновлены")
+                            const result = await User.findOne({
+                                where:{
+                                    id_user:req.user.id
+                                }
+                            })
+                            return res.json(result)
+                        }
+                        else {
+                            res.send("Ошибка при обновлении данных")
+                        }
+    
+                }
+                else res.send("Введённый вами телефон или пароль уже зарегистрированы другими пользователями")
             }
-        })
-        if(del) {
-            await User.destroy({
-                where:{id_user:del.id_user}
-            })
+            else res.send("Создайте учётную запись")
         }
-        else res.json('Запись не найдена')
-        return res.status("Была удалена следующая запись").json(del)
+    
+        async del(req,res){
+            const found = await User.findOne({
+                where:{id_user:req.user.id}
+            })
+            if(found || found!=null){
+                const status_del = await User.destroy({
+                    where:{id_user:req.user.id}
+                })
+                if(status_del === 1){
+                    res.send("Запись удалена")
+                }
+                else res.send("Не удалось удалить запись")
+            }
+            else res.send("У вас нет учётной записи")
+        }
+    
+        async del_all(req,res,next){
+            const dest = await User.destroy({
+                truncate:true
+            })
+            if (dest >=1) return res.send("Таблица опустошена")
+            else return next(ApiError.internal("Не удалось удалить записи"))
+        }
     }
-}
-module.exports = new User_Query()
+    module.exports = new User_Query()

@@ -19,7 +19,7 @@ module.exports = function(role1,role2) {
             next()
         }
         catch(e) {
-            res.status(401).json({message:"Не авторизован: другая причина"})
+            res.status(401).json({message:"Не авторизован: возможно токен устарел"})
         }
     }
 }

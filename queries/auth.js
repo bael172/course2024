@@ -15,9 +15,15 @@ const generateJwt = (id,name,email,phone,role) => {
 
 class AuthController{
     async registration(req, res, next){
-        const {s_name, s_email, s_phone, s_passwd, s_role} = req.body
+        const {s_name, s_email, s_phone, s_passwd,s_passwdCheck, s_role} = req.body
         if(!s_email || !s_phone || !s_passwd) {
             return next(ApiError.badRequest('Введите эл.почту, телефон и придумайте пароль'))
+        }
+        if(!s_passwdCheck){
+            return next(ApiError.badRequest('Введите пароль еще раз'))
+        }
+        if(s_passwd!==s_passwdCheck){
+            return next(ApiError.badRequest('Пароли не совпадают'))
         }
         const candidate = await User.findOne({
             where:{
