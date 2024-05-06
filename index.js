@@ -9,13 +9,25 @@ const cors = require('cors')
 
 const PORT=process.env.PORT || 5000
 
+const flash = require('connect-flash')
+
 const app=express()
 app.use(cors())
 app.use(express.json())
+
 app.use('/api',router)
 
 app.get('/msg',(req,res) => { 
     res.status(200).json({message:"Working"})
+
+
+/*
+app.configure(function(){
+    app.use(express.cookieParser('keyboard cat'))
+    app.use(express.session({cookie: {maxAge:60000}}))
+    app.use(flash())
+})
+*/
 })
     const start = async()=> {
         try{
