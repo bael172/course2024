@@ -19,10 +19,10 @@ class AuthController{
         if(!s_email || !s_phone || !s_passwd) {
             return next(ApiError.badRequest('Введите эл.почту, телефон и придумайте пароль'))
         }
-        if(!s_passwdCheck){
+        if(!s_passwdAgain){
             return next(ApiError.badRequest('Введите пароль еще раз'))
         }
-        if(s_passwd!==s_passwdCheck){
+        if(s_passwd!==s_passwdAgain){
             return next(ApiError.badRequest('Пароли не совпадают'))
         }
         const candidate = await User.findOne({
