@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const {User} = require('../db/tables')
 const {Op} = require("sequelize")
 
+require("dotenv").config({path:"./db/.env"})
 
 const generateJwt = (id,name,email,phone,role) => {
     return jwt.sign(
@@ -23,18 +24,18 @@ class AuthController{
             return
         }
         if(!passwdAgain){
-            res.status(403).json({message:'Введите пароль еще раз'})
+            res.status(402).json({message:'Введите пароль еще раз'})
             //return next(ApiError.badRequest('Введите пароль еще раз'))
             return
         }
         if(passwd!==passwdAgain){
-            res.status(404).json({message:'Пароли не совпадают'})
+            res.status(403).json({message:'Пароли не совпадают'})
             //return next(ApiError.badRequest('Пароли не совпадают'))
             return
         }
         const obj = {email,phone}
         let condition = []
-        condition = Object.entries(obj).reduce(accum,([key,value])=>{
+        condition = Object.entries(obj).reduce((accum,[key,value])=>{
             if(value){ //запись в условие значений не являющихся null или undefined
                 accum[key]=value
             }
@@ -42,7 +43,7 @@ class AuthController{
         },{}) //используем объект как первичное значение accum
         const candidate = await User.findOne({
             where:{[Op.or]:condition}
-    })
+        })
         if(candidate) {
             return next(ApiError.badRequest('Пользователь с такой почтой или телефоном уже существует'))
         }
