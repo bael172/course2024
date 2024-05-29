@@ -6,6 +6,7 @@ const course = require('../queries/course')
 const token = require('../security/checkToken')
 const token_role = require('../security/checkToken&Role')
 
+router.get('/by_name',course.get_by_name)
 router.get('/all',course.get_all)
 router.post('/add',token_role("admin","manager"),course.add)
 router.patch('/edit/:id',token_role("admin","manager"),course.edit)

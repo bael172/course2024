@@ -107,7 +107,6 @@ class AuthController{
         
         const token = generateJwt(user.id_user,user.name, user.email, user.phone, user.role)
         return res.status(200).json({token})
-        //res.redirect('/path/path')
     }
 
     async check(req,res,next){

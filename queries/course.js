@@ -15,11 +15,13 @@ class Courses{
             return next(ApiError.internal("Не удалось выполнить запрос"))
         }
     }
-    async get_all(req,res){
+    async get_by_name(req,res){
         try{
-            const all = await Course.findAll()
-            if(all.length!==0) return res.json(all)
-            else res.send("Ни одной записи в таблице")
+            const found = await Course.findOne({
+                where:{
+                    id_course:req.params.name
+                }
+            })
         }
         catch(e){
             return next(ApiError.internal("Не удалось выполнить запрос"))
@@ -90,6 +92,13 @@ class Courses{
             else next(ApiError.internal("Не удалось удалить запись"))
         }
         else return res.send(`Запись с id=${req.params.id} не существует`)
+    }
+    async del_all(req,res,next){
+        const dest = await Course.destroy({
+            truncate:true
+        })
+        if (dest >=1) return res.send("Таблица опустошена")
+        else return next(ApiError.internal("Не удалось удалить записи"))
     }
 }
 
