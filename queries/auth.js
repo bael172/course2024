@@ -16,10 +16,9 @@ const generateJwt = (id,name,email,phone,role) => {
 
 class AuthController{
     async registration(req, res, next){
-        const {s_name:name, s_email:email, s_phone:phone, 
-            s_passwd:passwd, s_passwdAgain:passwdAgain, s_role:role} = req.body
-        if(!email || !phone || !passwd) {
-            res.status(401).json({message:'Введите эл.почту, телефон и придумайте пароль'})
+        const {name, email, phone, passwd, passwdAgain, role} = req.body
+        if(!(email && passwd)||!(phone && passwd)) {
+            res.status(401).json({message:'Введите эл.почту или телефон и придумайте пароль'})
             //return next(ApiError.badRequest('Введите эл.почту, телефон и придумайте пароль'))
             return
         }
@@ -35,12 +34,19 @@ class AuthController{
         }
         const obj = {email,phone}
         let condition = []
+        console.log("Свойства объекта:",Object.entries(obj))
         condition = Object.entries(obj).reduce((accum,[key,value])=>{
-            if(value){ //запись в условие значений не являющихся null или undefined
+            if(value){  //запись в условие значений не являющихся null или undefined
                 accum[key]=value
+                console.log("accum[key]=",accum[key])
+                console.log("value=",value)
             }
+            console.log("accum=",accum)
             return accum
         },{}) //используем объект как первичное значение accum
+        for(let value of condition){
+            console.log(value)
+        }
         const candidate = await User.findOne({
             where:{[Op.or]:condition}
         })
@@ -53,11 +59,11 @@ class AuthController{
         if(passwd == passwdAgain){
             const hashpasswd = await bcrypt.hash(passwd,5)
             const user = await User.create({
-                name:name,
-                email:email,
-                phone:phone,
+                name,
+                email,
+                phone,
                 passwd:hashpasswd,
-                role:role})
+                role})
             const token = generateJwt(user.id_user,user.name,user.email,user.phone,user.role)
             return res.status(200).json({token})
         }
