@@ -30,10 +30,7 @@ class Courses{
     async add(req,res,next){
         const {name,cost,period_days,lesson_count,description} = req.body
         const added = await Course.findOne({
-            where:{[Op.or]:[
-                {name:name},
-                {cost:cost}
-            ]}
+            where:{name}
         })
         if(!added || added==null) {
             try{

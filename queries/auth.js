@@ -16,8 +16,8 @@ const generateJwt = (id,name,email,phone,role) => {
 
 class AuthController{
     async registration(req, res, next){
-        const {name, email, phone, passwd, passwdAgain, role} = req.body
-        if(!(email && passwd)||!(phone && passwd)) {
+        const {name, email, id_course, phone, passwd, passwdAgain, role} = req.body
+        if(!email && !passwd || !phone && !passwd) {
             res.status(401).json({message:'Введите эл.почту или телефон и придумайте пароль'})
             //return next(ApiError.badRequest('Введите эл.почту, телефон и придумайте пароль'))
             return
@@ -44,9 +44,7 @@ class AuthController{
             console.log("accum=",accum)
             return accum
         },{}) //используем объект как первичное значение accum
-        for(let value of condition){
-            console.log(value)
-        }
+
         const candidate = await User.findOne({
             where:{[Op.or]:condition}
         })
@@ -73,7 +71,7 @@ class AuthController{
     }
 
     async login(req,res,next){
-        const {s_email:email,s_phone:phone,s_passwd:passwd} = req.body
+        const {email,phone,passwd} = req.body
         if(!(email||phone)){
             res.status(401).json({message:'Введите эл.почту/телефон'})            
             //return next(ApiError.badRequest('Введите эл.почту / телефон и пароль'))
@@ -93,7 +91,6 @@ class AuthController{
             return accum
         },{}) //используем объект как первичное значение accum
         console.log(condition)
-
         const user = await User.findOne({
             where:{[Op.or]:condition}
         })

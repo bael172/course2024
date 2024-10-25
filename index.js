@@ -20,7 +20,7 @@ app.get('/msg',(req,res) => {
     const start = async()=> {
         try{
             await sequelize.authenticate()
-            await sequelize.sync()
+            await sequelize.sync({alter:true})
             console.log('Connection has been established successfully');
             app.listen(PORT,() => console.log(`Server start on ${PORT}`))
         }
